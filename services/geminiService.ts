@@ -3,10 +3,12 @@ import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
 const getClient = () => {
+  // Use process.env.API_KEY as required by guidelines.
+  // This also fixes the "Property 'env' does not exist on type 'ImportMeta'" error.
   const apiKey = process.env.API_KEY;
   
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set process.env.API_KEY.");
+    throw new Error("API Key is missing. Please set API_KEY in your environment variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
