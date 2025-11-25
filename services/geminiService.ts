@@ -1,9 +1,16 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
+// Declare process to avoid TypeScript errors when accessing process.env.API_KEY
+declare const process: {
+  env: {
+    API_KEY: string;
+  }
+};
+
 const getClient = () => {
-  // The API key must be obtained exclusively from the environment variable process.env.API_KEY
+  // Use process.env.API_KEY as per Google GenAI guidelines
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
     throw new Error("API Key is missing. Please set API_KEY in your environment variables.");
@@ -52,19 +59,25 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
 
 export const optimizeTitle = async (topic: string): Promise<string[]> => {
   const ai = getClient();
-  const prompt = `你是專業的內容行銷編輯。請針對主題「${topic}」，提供 3 個吸引人點擊、符合 SEO、且語氣溫暖不誇大的文章標題。
-  回傳格式：純 JSON 字串陣列，例如 ["標題一", "標題二", "標題三"]。`;
+  const prompt = `你是專業的內容行銷編輯。請針對主題「${topic}」，提供 3 個吸引人點擊、符合 SEO、且語氣溫暖不誇大的文章標題。`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING
+          }
+        }
+      }
     });
     
-    const text = response.text || "";
-    const jsonMatch = text.match(/\[.*\]/s);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+    if (response.text) {
+      return JSON.parse(response.text);
     }
     return [];
   } catch (e) {
