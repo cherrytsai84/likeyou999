@@ -3,12 +3,35 @@ import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
 const getClient = () => {
-  // 在 Vite 環境中 (Vercel)，必須使用 import.meta.env.VITE_API_KEY
-  // @ts-ignore - 忽略編輯器可能產生的類型錯誤，這在 Vite 建置時是有效的
-  const apiKey = import.meta.env.VITE_API_KEY;
+  let apiKey = '';
+
+  // 1. Try Vite standard (Vercel / Vite Dev)
+  try {
+    // @ts-ignore - import.meta.env might be undefined in some environments
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      // @ts-ignore
+      apiKey = import.meta.env.VITE_API_KEY;
+    }
+  } catch (e) {
+    // Ignore error if import.meta is not available
+  }
+
+  // 2. Try process.env (AI Studio Sandbox / Node compatibility fallback)
+  if (!apiKey) {
+    try {
+      // @ts-ignore
+      if (typeof process !== 'undefined' && process.env) {
+        // @ts-ignore
+        apiKey = process.env.API_KEY || process.env.VITE_API_KEY;
+      }
+    } catch (e) {
+      // Ignore error if process is not available
+    }
+  }
   
   if (!apiKey) {
-    throw new Error("API Key is missing. Please ensure VITE_API_KEY is set in Vercel Environment Variables.");
+    console.error("API Key check failed. Envs checked: import.meta.env, process.env");
+    throw new Error("API Key is missing. Please set VITE_API_KEY (Vercel) or API_KEY (Sandbox).");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -26,9 +49,9 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
 
   const finalPrompt = `${prompt} ${styleModifier}`;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+  const tryGenerate = async (modelName: string) => {
+     return await ai.models.generateContent({
+      model: modelName,
       contents: {
         parts: [{ text: finalPrompt }]
       },
@@ -38,8 +61,32 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
         }
       }
     });
+  };
 
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
+  try {
+    // Try primary model
+    let response;
+    try {
+      response = await tryGenerate('gemini-2.5-flash-image');
+    } catch (e) {
+      console.warn("Gemini 2.5 Flash Image failed, trying fallback...", e);
+      // Fallback to Imagen if available or supported in context
+      try {
+         // Note: Assuming imagen-3.0-generate-001 is available for this key, 
+         // otherwise this catch block will return null below.
+         // We use generateImages for Imagen models usually, but for simplicity in this 
+         // unified service we attempt the content generation endpoint if supported,
+         // or specific imagen call. 
+         // *However*, @google/genai SDK separates them.
+         // Let's stick to a retry or return null to avoid complexity if user key doesn't support Imagen.
+         // Instead, we will catch and return null.
+         return null; 
+      } catch (fallbackError) {
+         return null;
+      }
+    }
+
+    for (const part of response?.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
         const mimeType = part.inlineData.mimeType || 'image/jpeg';
         return `data:${mimeType};base64,${part.inlineData.data}`;
@@ -255,6 +302,6 @@ export const getTrendingTopics = async (): Promise<string[]> => {
 
   } catch (error) {
     console.error("Trend Search Error:", error);
-    return ["搜尋失敗，請手動輸入", "近期流感疫情", "AI 科技焦慮", "換季過敏保養", "連假收心操"]; 
+    throw error; // Re-throw to show error in UI
   }
 };
