@@ -2,18 +2,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
-// Declare process to avoid TypeScript errors when accessing process.env.API_KEY
-declare const process: {
-  env: {
-    API_KEY: string;
-  }
-};
-
 const getClient = () => {
-  // Use process.env.API_KEY as per Google GenAI guidelines
   const apiKey = process.env.API_KEY;
+  
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set API_KEY in your environment variables.");
+    throw new Error("API Key is missing. Please set process.env.API_KEY.");
   }
   return new GoogleGenAI({ apiKey });
 };
