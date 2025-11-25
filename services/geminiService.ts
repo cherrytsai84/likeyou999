@@ -3,9 +3,10 @@ import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
 const getClient = () => {
+  // The API key must be obtained exclusively from the environment variable process.env.API_KEY
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is missing. Please ensure process.env.API_KEY is available.");
+    throw new Error("API Key is missing. Please set API_KEY in your environment variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
