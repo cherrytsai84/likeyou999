@@ -3,12 +3,12 @@ import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
 const getClient = () => {
-  // Use process.env.API_KEY as required by guidelines.
-  // This also fixes the "Property 'env' does not exist on type 'ImportMeta'" error.
-  const apiKey = process.env.API_KEY;
+  // 在 Vite 環境中 (Vercel)，必須使用 import.meta.env.VITE_API_KEY
+  // @ts-ignore - 忽略編輯器可能產生的類型錯誤，這在 Vite 建置時是有效的
+  const apiKey = import.meta.env.VITE_API_KEY;
   
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set API_KEY in your environment variables.");
+    throw new Error("API Key is missing. Please ensure VITE_API_KEY is set in Vercel Environment Variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
