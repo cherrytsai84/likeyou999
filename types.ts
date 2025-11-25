@@ -2,7 +2,8 @@ export enum AppMode {
   HUB_PAGE = 'HUB_PAGE',
   ARTICLE_PLAN = 'ARTICLE_PLAN',
   ARTICLE = 'ARTICLE',
-  TREND_ARTICLE = 'TREND_ARTICLE'
+  TREND_ARTICLE = 'TREND_ARTICLE',
+  LIBRARY = 'LIBRARY'
 }
 
 export enum ArticleCategory {
@@ -15,18 +16,25 @@ export enum ArticleCategory {
   TREND_NOTES = '時事生活・Trend Notes'
 }
 
+export enum HubPageType {
+  BRAND_STORY = '品牌故事',
+  EMOTIONAL_VALUE = '情緒價值傳遞'
+}
+
 export interface GeneratorInputs {
   category: ArticleCategory | string;
   topic: string;
   wordCount: string; // e.g., "800-1000"
   quantity: number; // For Article Plan
   trendTopic: string; // For Trend Article
+  brandConcept: string; // For Custom Hub Page inputs
+  hubPageType: HubPageType; // For Hub Page specific type
 }
 
-export interface HistoryItem {
+export interface ArticleHistoryItem {
   id: string;
-  mode: AppMode;
-  timestamp: number;
   title: string;
-  content: string;
+  category: string;
+  content: string; // Markdown content
+  timestamp: number;
 }

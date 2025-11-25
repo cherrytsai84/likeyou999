@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppMode } from '../types';
 import { MODE_CONFIG } from '../constants';
-import { LayoutDashboard, ListTodo, FileText, TrendingUp, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ListTodo, FileText, TrendingUp, Sparkles, BookOpen } from 'lucide-react';
 
 interface SidebarProps {
   currentMode: AppMode;
@@ -16,16 +16,17 @@ const Sidebar: React.FC<SidebarProps> = ({ currentMode, onModeChange }) => {
       case AppMode.ARTICLE_PLAN: return <ListTodo size={20} />;
       case AppMode.ARTICLE: return <FileText size={20} />;
       case AppMode.TREND_ARTICLE: return <TrendingUp size={20} />;
+      case AppMode.LIBRARY: return <BookOpen size={20} />;
       default: return <Sparkles size={20} />;
     }
   };
 
   return (
-    <div className="w-64 bg-stone-900 text-stone-300 h-screen flex flex-col shadow-xl fixed left-0 top-0 border-r border-stone-800">
+    <div className="w-64 bg-stone-900 text-stone-300 h-screen flex flex-col shadow-xl fixed left-0 top-0 border-r border-stone-800 z-50">
       <div className="p-6 border-b border-stone-800">
         <div className="flex items-center gap-3 text-emerald-400">
           <Sparkles size={24} />
-          <h1 className="text-xl font-bold tracking-wider text-white">LikeYou Editor</h1>
+          <h1 className="text-xl font-bold tracking-wider text-white">璽歡知識文章生成</h1>
         </div>
         <p className="text-xs mt-2 text-stone-500">AI Content Strategy & Gen</p>
       </div>
