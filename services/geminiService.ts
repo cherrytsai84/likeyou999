@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { SYSTEM_INSTRUCTION } from '../constants';
 import { AppMode, GeneratorInputs, ArticleHistoryItem, HubPageType } from '../types';
 
@@ -49,6 +49,14 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
 
   const finalPrompt = `${prompt} ${styleModifier}`;
 
+  // Relax safety settings to allow generating images of people
+  const safetySettings = [
+    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+  ];
+
   try {
     // 1. Try primary model: gemini-2.5-flash-image
     // Uses generateContent API
@@ -61,7 +69,8 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
         config: {
           imageConfig: {
             aspectRatio: "16:9",
-          }
+          },
+          safetySettings: safetySettings,
         }
       });
 
@@ -82,7 +91,8 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
         config: {
           numberOfImages: 1,
           aspectRatio: '16:9',
-          outputMimeType: 'image/jpeg'
+          outputMimeType: 'image/jpeg',
+          safetySettings: safetySettings,
         }
       });
 
