@@ -49,52 +49,52 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
 
   const finalPrompt = `${prompt} ${styleModifier}`;
 
-  const tryGenerate = async (modelName: string) => {
-     return await ai.models.generateContent({
-      model: modelName,
-      contents: {
-        parts: [{ text: finalPrompt }]
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "16:9",
+  try {
+    // 1. Try primary model: gemini-2.5-flash-image
+    // Uses generateContent API
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: finalPrompt }]
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "16:9",
+          }
+        }
+      });
+
+      for (const part of response?.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          const mimeType = part.inlineData.mimeType || 'image/jpeg';
+          return `data:${mimeType};base64,${part.inlineData.data}`;
         }
       }
-    });
-  };
+    } catch (flashError) {
+      console.warn("Gemini 2.5 Flash Image failed, switching to Imagen 3 Fallback...", flashError);
+      
+      // 2. Fallback model: imagen-3.0-generate-001
+      // Uses generateImages API (Different response structure)
+      const fallbackResponse = await ai.models.generateImages({
+        model: 'imagen-3.0-generate-001',
+        prompt: finalPrompt,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: '16:9',
+          outputMimeType: 'image/jpeg'
+        }
+      });
 
-  try {
-    // Try primary model
-    let response;
-    try {
-      response = await tryGenerate('gemini-2.5-flash-image');
-    } catch (e) {
-      console.warn("Gemini 2.5 Flash Image failed, trying fallback...", e);
-      // Fallback to Imagen if available or supported in context
-      try {
-         // Note: Assuming imagen-3.0-generate-001 is available for this key, 
-         // otherwise this catch block will return null below.
-         // We use generateImages for Imagen models usually, but for simplicity in this 
-         // unified service we attempt the content generation endpoint if supported,
-         // or specific imagen call. 
-         // *However*, @google/genai SDK separates them.
-         // Let's stick to a retry or return null to avoid complexity if user key doesn't support Imagen.
-         // Instead, we will catch and return null.
-         return null; 
-      } catch (fallbackError) {
-         return null;
+      const imageBytes = fallbackResponse?.generatedImages?.[0]?.image?.imageBytes;
+      if (imageBytes) {
+        return `data:image/jpeg;base64,${imageBytes}`;
       }
     }
 
-    for (const part of response?.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        const mimeType = part.inlineData.mimeType || 'image/jpeg';
-        return `data:${mimeType};base64,${part.inlineData.data}`;
-      }
-    }
     return null;
   } catch (error) {
-    console.error("Image Generation Error:", error);
+    console.error("All Image Generation attempts failed:", error);
     return null; 
   }
 };
