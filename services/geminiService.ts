@@ -44,7 +44,8 @@ export const generateImage = async (prompt: string, isChart: boolean = false): P
   let styleModifier = ". High quality, photorealistic, lifestyle photography, soft lighting, pastel tones, #395A77 color accents. Subjects must be Taiwanese/East Asian people, natural look. No text overlays.";
   
   if (isChart) {
-    styleModifier = ". High quality clean infographic design, minimal modern chart, data visualization, soft colors #395A77 and white, professional vector style, no gibberish text.";
+    // Explicitly request Traditional Chinese text for charts
+    styleModifier = ". High quality clean infographic design, minimal modern chart, data visualization, soft colors #395A77 and white, professional vector style. Text labels must be in Traditional Chinese (繁體中文).";
   }
 
   const finalPrompt = `${prompt} ${styleModifier}`;

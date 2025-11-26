@@ -43,6 +43,7 @@ export const SYSTEM_INSTRUCTION = `
 請在要插入圖片/圖表的地方，使用此特殊標記格式：
 *   一般圖片： \`{{GENERATE_IMAGE: 英文 Prompt | 中文 ALT 說明}}\`
 *   資訊圖表： \`{{GENERATE_CHART: 英文 Prompt | 中文 ALT 說明}}\`
+    *   **注意**：針對圖表，請在 Prompt 中特別備註 'Text labels in Traditional Chinese (繁體中文)'。
 
 Prompt 撰寫要求：
 *   風格：Soft warm lighting, lifestyle photography, cozy tone, minimalistic.
